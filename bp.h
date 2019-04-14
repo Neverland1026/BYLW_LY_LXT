@@ -7,10 +7,10 @@
 
 using namespace std;
 
-#define innode 10 // ÊäÈë½ÚµãÊý
-#define hidenode 8 //Òþº¬½ÚµãÊý
+#define innode 7 // ÊäÈë½ÚµãÊý
+#define hidenode 5 //Òþº¬½ÚµãÊý
 #define hidelayer 1 // Òþº¬²ãÊý
-#define outnode 1 //Êä³ö½ÚµãÊý
+#define outnode 5 //Êä³ö½ÚµãÊý
 #define learningRate 0.09 // Ñ§Ï°ËÙÂÊ
 
 // --- -1~1 Ëæ»úÊý²úÉúÆ÷ --- 

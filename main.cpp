@@ -58,6 +58,26 @@ namespace IO{
 		return 1;
 	}
 
+	// overwrite
+	int loadTxt(std::string path, std::vector<std::vector<double>> & vec, int begin = 0){
+		std::ifstream ifs(path.c_str(), std::ios::in);
+		if (!ifs) { std::cout << "Can not open the file!\n"; return -1; }
+		std::string lineStr;
+		while (getline(ifs, lineStr)) {
+			std::stringstream ss(lineStr);
+			std::string str;
+			std::vector<double> lineArray;
+			int be = 0;
+			while (getline(ss, str, ' ')){
+				if (be++ >= begin)
+					lineArray.push_back(std::stod(str));
+			}
+			vec.push_back(lineArray);
+		}
+		vec.shrink_to_fit();
+		return 1;
+	}
+
 	/*
 	* \brief 遍历一个文件夹下的所有点云文件
 	* \param path 文件路径(绝对路径或者相对路径)
@@ -87,7 +107,6 @@ namespace IO{
 }
 
 // 李晓天的代码合集
-std::vector<std::vector<std::string>> VEC;  // 全局变量
 namespace LXT{
 
 	/*
@@ -286,6 +305,9 @@ namespace LXT{
 		return 1;
 	}
 
+	/*
+	 * BP 神经网络核心代码
+	 **/
 	int AI(std::vector<std::vector<double>> const & pTrainData,
 		std::vector<std::vector<double>> const & pTrainTag,
 		std::vector<std::vector<double>> const & pTestData,
@@ -324,112 +346,59 @@ namespace LXT{
 		return 1;
 	}
 
-	int readData(std::vector<std::vector<double>> & pVec, std::string path){
-		std::ifstream ifs(path.c_str());
-		if (!ifs){
-			std::cout << "Can not find file!\n";
-			return -1;
-		}
+	/*
+	* BP 神经网络核心代码
+	**/
+	int BPTrain(){ // 注意在训练之前修改 bp.h 的#define innode 7
 
-		std::string lineStr;
-		int indexVec = 0;
-		while (getline(ifs, lineStr)) {
-			std::stringstream ss(lineStr); // getline 用法1
-			std::string str;
-			std::vector<std::string> lineArray;
-			while (getline(ss, str, ' ')) // getline 用法2
-				lineArray.push_back(str);
+		std::cout << " > 正在准备神经网络训练数据 ...\n";
 
-			for (auto v : lineArray)
-				pVec[indexVec].push_back(std::stod(v));
+		// 定义 train_data | train_tag | test_data | test_tag 的路径
+		std::string path_train_data, path_train_tag, path_test_data;
+		std::cout << " > 请输入 train_data 的路径："; std::cin >> path_train_data;
+		std::cout << " > 请输入 train_tag 的路径："; std::cin >> path_train_tag;
+		std::cout << " > 请输入 test_data 的路径："; std::cin >> path_test_data;
 
-			indexVec++;
-		}
+		// 定义 vector 用以保存向量
+		std::vector<std::vector<double>> train_data, train_tag, test_data/*, test_tag*/;
 
-		ifs.close();
-		return 1;
+		// 读取点云数据
+		std::cout << " > 正在读取点云数据 ...\n";
 
-	}
+		std::cout << " > train_data ...";
+		IO::loadTxt(path_train_data, train_data, 3);
+		std::cout << "		点数： " << train_data.size() << std::endl;
 
-	int readData2(std::vector<std::vector<double>> & pVec, std::string path){
-		std::ifstream ifs(path.c_str());
-		if (!ifs){
-			std::cout << "Can not find file!\n";
-			return -1;
-		}
+		std::cout << " > train_tag ...";
+		IO::loadTxt(path_train_tag, train_tag);
+		std::cout << "		点数： " << train_tag.size() << std::endl;
 
-		std::string lineStr;
-		int indexVec = 0;
-		while (getline(ifs, lineStr)) {
-			std::stringstream ss(lineStr); // getline 用法1
-			std::string str;
-			std::vector<std::string> lineArray;
-			while (getline(ss, str, ' ')) // getline 用法2
-				lineArray.push_back(str);
+		std::cout << " > test_data ...";
+		IO::loadTxt(path_test_data, test_data, 3); // 注意从第三位开始读取
+		std::cout << "		点数： " << test_data.size() << std::endl;
 
-			// 保留原始数据精度
-			std::vector<std::string> vv;
-			vv.push_back(lineArray[0]);
-			vv.push_back(lineArray[1]);
-			vv.push_back(lineArray[2]);
-			VEC.push_back(vv);
+		std::cout << " > 点云数据读取完毕 ...\n";
 
-			for (int tt = 3; tt <= 12; ++tt){
-				pVec[indexVec].push_back(std::stod(lineArray[tt]));
-			}
-			pVec[indexVec].shrink_to_fit();
-
-			indexVec++;
-			/*
-						if (indexVec % 100000 == 0)
-						std::cout << indexVec << '\n';*/
-		}
-
-		VEC.shrink_to_fit();
-
-		ifs.close();
-		return 1;
-
-	}
-
-	int BPTrain(){
-
-		std::cout << " > 开始读取训练数据 ...\n";
-
-		// 定义 train_num | test_num
-		int train_num = 5; // 训练数据个数 ***
-		int test_num = 1394229;  // 测试数据个数 ***
-
-		// 定义 train_data | train_tag | test_data | test_tag
-		std::vector<std::vector<double>> train_data(train_num);
-		std::vector<std::vector<double>> train_tag(train_num);
-		std::vector<std::vector<double>> test_data(test_num);
-		std::vector<std::vector<double>> test_tag(test_num);
-
-		// 读入数据
-		if (readData(train_data, "E:/train_data.txt") < 0 ||
-			readData(train_tag, "E:/train_tag.txt") < 0 ||
-			readData2(test_data, "E:/BinarySignal.txt") < 0){
-			return -1;
-		}
-
-		std::cout << " > 开始训练模型 ...\n";
+		// 定义 test_tag
+		std::vector<std::vector<double>> test_tag(test_data.size());
 
 		// 训练
+		std::cout << " > 训练模型中 ...\n";
 		if (AI(train_data, train_tag, test_data, test_tag) < 0){
 			std::cout << " > 模型训练发生未知错误！\n";
 			return -1;
 		}
 
 		// 输出预测结果
-		std::cout << " > 开始生成分类结果 ...\n";
-		std::ofstream ofs("E:/test_tag.txt");
+		std::cout << " > 开始输出训练结果 ...\n";
+		std::string path = "E:/" + path_train_data.substr(0, 5) + ".txt";
+		std::ofstream ofs(path);
 		for (int i = 0; i < test_tag.size(); i++)
 		{
 			std::string str = "";
-			str += VEC[i][0] + " ";
-			str += VEC[i][1] + " ";
-			str += VEC[i][2] + " ";
+			str += std::to_string(test_data[i][0]) + " ";
+			str += std::to_string(test_data[i][1]) + " ";
+			str += std::to_string(test_data[i][2]) + " ";
 			for (int j = 0; j < test_tag[i].size(); j++){ // 结果四舍五入
 				str += std::to_string((int)(std::round(test_tag[i][j]))) + " ";
 			}
@@ -437,7 +406,7 @@ namespace LXT{
 		}
 		ofs.close();
 
-		std::cout << " > 训练模型完毕 ...		" << "E:/test_tag.txt\n";
+		std::cout << " > 训练模型完毕 ...		" << path << "\n";
 
 		return 1;
 	}
@@ -570,6 +539,7 @@ namespace LXT{
 
 		// 对每一列的数值进行归一化
 		for (int i = 0; i < vCols.size(); ++i){
+			std::cout << " > 正在归一化第 " << i << " 列...\n";
 			__normalized(vCols[i]); // 每个 vector 都进行归一化
 		}
 
@@ -579,7 +549,7 @@ namespace LXT{
 		for (int i = 0; i < vec.size(); ++i){
 			ofs << vec[i][0] << " " << vec[i][1] << " " << vec[i][2] << " ";
 			for (int j = 0; j < vCols.size(); ++j){
-				ofs << std::to_string(vCols[j][i]).substr(0,7) << " ";
+				ofs << std::to_string(vCols[j][i]).substr(0, 7) << " ";
 			}
 			ofs << "\n";
 		}
@@ -588,6 +558,7 @@ namespace LXT{
 
 		return 1;
 	}
+
 }
 
 // Neverland_LY 的代码合集
