@@ -510,7 +510,7 @@ namespace LXT{
 	// 获得权重
 	int getWeight(std::string str){
 		// 小天指定的标准信号（train-tag）
-		std::vector<std::string> vecStr{ "11011", "11110", "10010", "00101", "01101" };
+		std::vector<std::string> vecStr{ "10000", "01000", "00100", "00010", "00001" };
 		std::vector<int> idx(vecStr.size());
 		std::iota(idx.begin(), idx.end(), 0);
 		std::vector<int> vecValue(vecStr.size());
@@ -531,6 +531,57 @@ namespace LXT{
 		for (auto v : vec){
 			std::string str = v[3] + v[4] + v[5] + v[6] + v[7];
 			ofs << v[0] << " " << v[1] << " " << v[2] << " " << std::to_string(getWeight(str) + 1) << std::endl;
+		}
+		ofs.close();
+		std::cout << " > 运行完毕 ...		" << path << std::endl;
+
+		return 1;
+	}
+
+	// 归一化函数
+	int __normalized(std::vector<double> & vec){
+
+		// 查找最大最小值
+		double maxNum = *std::max_element(vec.begin(), vec.end());
+		double minNum = *std::min_element(vec.begin(), vec.end());
+
+		// 归一化到 [0.0, 1.0]
+		double deltaNum = maxNum - minNum;
+		for (auto & value : vec){ value = 0.0 + (value - minNum) / deltaNum * (1.0 - 0.0); }
+		return 1;
+	}
+
+	// 点云数据归一化
+	int dataNormalized(const std::vector<std::vector<std::string>> & vec){
+
+		std::cout << " > 正在归一化 ...\n";
+
+		// 首先进行填充数据，将要进行归一化的列都单独存成一个 vector
+		std::vector<std::vector<double>> vCols; // 定义存取每列的vector
+		// 这里采取列数在外循环，行数在内循环，有利于减少CPU切片速度
+		for (int col = 3; col < vec[0].size(); ++col){
+			std::vector<double> vCol;
+			for (int row = 0; row < vec.size(); ++row){
+				vCol.push_back(std::stod(vec[row][col]));
+			}
+			vCol.shrink_to_fit();
+			vCols.push_back(vCol);
+		}
+
+		// 对每一列的数值进行归一化
+		for (int i = 0; i < vCols.size(); ++i){
+			__normalized(vCols[i]); // 每个 vector 都进行归一化
+		}
+
+		// 按照原始顺序输出结果
+		std::string path("E:/normalized.txt");
+		std::ofstream ofs(path);
+		for (int i = 0; i < vec.size(); ++i){
+			ofs << vec[i][0] << " " << vec[i][1] << " " << vec[i][2] << " ";
+			for (int j = 0; j < vCols.size(); ++j){
+				ofs << std::to_string(vCols[j][i]).substr(0,4) << " ";
+			}
+			ofs << "\n";
 		}
 		ofs.close();
 		std::cout << " > 运行完毕 ...		" << path << std::endl;
@@ -1165,7 +1216,8 @@ int printUsage(){
 		"训练神经网络（由 BinarySignal(XYZ0101010101) 变为 test_tag(XYZ010101）",
 		"开始给数据加标签（由 test_tag(XYZ010101) 变为 classfication-6(XYZN)）", // 13
 		"未进行BP训练，直接进行分类（由 BinarySignal((XYZ0101010101)) 生成 classfication-10(XYZN)）",
-		"根据点云数据(XYZ01010)生成XYZ1-5（数字由相同值的个数决定）" };
+		"根据点云数据(XYZ01010)生成XYZ1-5（数字由相同值的个数决定）",
+		"点云数据归一化（除去XYZ坐标）" };
 	int index = 1;
 	for (auto v : vecFunc){
 		std::cout << "	" << std::to_string(index++) << "、" << v << std::endl;
@@ -1260,6 +1312,7 @@ int excuteFunc(int numFunc){
 	else if (numFunc == 13) return LXT::addLabel6(vecCloudA);
 	else if (numFunc == 14) return LXT::addLabel10(vecCloudA);
 	else if (numFunc == 15) return LXT::generateSignalByWeight(vecCloudA);
+	else if (numFunc == 16) return LXT::dataNormalized(vecCloudA);
 }
 
 int main(){
