@@ -579,7 +579,7 @@ namespace LXT{
 		for (int i = 0; i < vec.size(); ++i){
 			ofs << vec[i][0] << " " << vec[i][1] << " " << vec[i][2] << " ";
 			for (int j = 0; j < vCols.size(); ++j){
-				ofs << std::to_string(vCols[j][i]).substr(0,4) << " ";
+				ofs << std::to_string(vCols[j][i]).substr(0,7) << " ";
 			}
 			ofs << "\n";
 		}
