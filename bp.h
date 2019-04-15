@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <iostream>
 #include <cmath>
 #include <vector>
@@ -7,20 +7,20 @@
 
 using namespace std;
 
-#define innode 7 // ÊäÈë½ÚµãÊý
-#define hidenode 5 //Òþº¬½ÚµãÊý
-#define hidelayer 1 // Òþº¬²ãÊý
-#define outnode 5 //Êä³ö½ÚµãÊý
-#define learningRate 0.1 // Ñ§Ï°ËÙÂÊ
+#define innode 7 // 输入节点数
+#define hidenode 5 //隐含节点数
+#define hidelayer 1 // 隐含层数
+#define outnode 5 //输出节点数
+#define learningRate 0.1 // 学习速率
 
-// --- -1~1 Ëæ»úÊý²úÉúÆ÷ --- 
+// --- -1~1 随机数产生器 --- 
 inline double get_11Random()    // -1 ~ 1
 {
 	return ((2.0*(double)rand() / RAND_MAX) - 1);
 }
 
 
-/**************sigmoidº¯Êý*****************/
+/**************sigmoid函数*****************/
 
 inline double sigmoid(double x)
 {
@@ -28,10 +28,10 @@ inline double sigmoid(double x)
 	return ans;
 }
 
-//---------ÊäÈë²ã½Úµã¡£°üº¬ÒÔÏÂ·ÖÁ¿£º---
-//1£¬value£º ¹Ì¶¨ÊäÈëÖµ£»
-//2£¬weight£ºÃæ¶ÔµÚÒ»²ãÒþº¬²ãÃ¿¸ö½Úµã¶¼ÓÐÈ¨Öµ
-//3£¬wDeltaSum£º·µ»ØÊ±µÚÒ»²ãÒþº¬²ãÃ¿¸ö½ÚµãÈ¨ÖµµÄdeltaÖµµÄÀÛ»ý
+//---------输入层节点。包含以下分量：---
+//1，value： 固定输入值；
+//2，weight：面对第一层隐含层每个节点都有权值
+//3，wDeltaSum：返回时第一层隐含层每个节点权值的delta值的累积
 
 typedef struct inputNode
 {
@@ -40,12 +40,12 @@ typedef struct inputNode
 
 }inputNode;
 
-//---------Êä³ö²ã½Úµã¡£°üº¬ÒÔÏÂÊýÖµ£º---
-//1£¬value: ½Úµãµ±Ç°Öµ£»
-//2,delta : ÓëÕýÈ·Êä³öÖµÖ®¼äµÄdeltaÖµ
-//3,rightout ÕýÈ·Êä³öÖµ
-//4£¬bias Æ«ÒÆÁ¿
-//5£¬bDelaSum: biasµÄdeltaÖµµÄÀÛ»ý£¬Ã¿¸ö½ÚµãÒ»¸ö
+//---------输出层节点。包含以下数值：---
+//1，value: 节点当前值；
+//2,delta : 与正确输出值之间的delta值
+//3,rightout 正确输出值
+//4，bias 偏移量
+//5，bDelaSum: bias的delta值的累积，每个节点一个
 
 typedef struct outputNode
 {
@@ -53,45 +53,45 @@ typedef struct outputNode
 
 }outputNode;
 
-// --- Òþº¬²ã½Úµã¡£°üº¬ÒÔÏÂÊýÖµ£º--- 
-// 1.value:     ½Úµãµ±Ç°Öµ£» 
-// 2.delta:     BPÍÆµ¼³öµÄdeltaÖµ£»
-// 3.bias:      Æ«ÒÆÁ¿
-// 4.bDeltaSum: biasµÄdeltaÖµµÄÀÛ»ý£¬Ã¿¸ö½ÚµãÒ»¸ö
-// 5.weight:    Ãæ¶ÔÏÂÒ»²ã£¨Òþº¬²ã/Êä³ö²ã£©Ã¿¸ö½Úµã¶¼ÓÐÈ¨Öµ£» 
-// 6.wDeltaSum£º weightµÄdeltaÖµµÄÀÛ»ý£¬Ãæ¶ÔÏÂÒ»²ã£¨Òþº¬²ã/Êä³ö²ã£©Ã¿¸ö½Úµã¸÷×Ô»ýÀÛ
+// --- 隐含层节点。包含以下数值：--- 
+// 1.value:     节点当前值； 
+// 2.delta:     BP推导出的delta值；
+// 3.bias:      偏移量
+// 4.bDeltaSum: bias的delta值的累积，每个节点一个
+// 5.weight:    面对下一层（隐含层/输出层）每个节点都有权值； 
+// 6.wDeltaSum： weight的delta值的累积，面对下一层（隐含层/输出层）每个节点各自积累
 
-typedef struct hiddenNode   // Òþº¬²ã½Úµã
+typedef struct hiddenNode   // 隐含层节点
 {
 	double value, delta, bias, bDeltaSum;
 	vector<double> weight, wDeltaSum;
 }hiddenNode;
 
-// --- µ¥¸öÑù±¾´æ´¢·½Ê½ --- 
+// --- 单个样本存储方式 --- 
 typedef struct sample
 {
 	vector<double> in, out;
 }sample;
 
-// --- BPÉñ¾­ÍøÂç --- 
+// --- BP神经网络 --- 
 
 class BpNet
 {
 public:
-	BpNet();    //¹¹Ôìº¯Êý
-	void forwardPropagationEpoc();  // µ¥¸öÑù±¾Ç°Ïò´«²¥
-	void backPropagationEpoc();     // µ¥¸öÑù±¾ºóÏò´«²¥
+	BpNet();    //构造函数
+	void forwardPropagationEpoc();  // 单个样本前向传播
+	void backPropagationEpoc();     // 单个样本后向传播
 
-	void training(static vector<sample> sampleGroup, double threshold);// ¸üÐÂ weight, bias
-	void predict(vector<sample>& testGroup);                          // Éñ¾­ÍøÂçÔ¤²â
+	void training(static vector<sample> sampleGroup, double threshold);// 更新 weight, bias
+	void predict(vector<sample>& testGroup);                          // 神经网络预测
 
-	void setInput(static vector<double> sampleIn);     // ÉèÖÃÑ§Ï°Ñù±¾ÊäÈë
-	void setOutput(static vector<double> sampleOut);    // ÉèÖÃÑ§Ï°Ñù±¾Êä³ö
+	void setInput(static vector<double> sampleIn);     // 设置学习样本输入
+	void setOutput(static vector<double> sampleOut);    // 设置学习样本输出
 
 public:
 	double error;
-	//´´½¨Ò»¸öÊý×éÖ¸Õë£¬¸ÃÊý×éµÄÖ¸ÏòÒ»¸ö½á¹¹Ìå±äÁ¿£¬ÕâÑù×öµÄºÃ´¦¾ÍÊÇÊ¹Êý¾Ýµ÷ÓÃÇå³þ
-	inputNode* inputLayer[innode];                      // ÊäÈë²ã£¨½öÒ»²ã£©
-	outputNode* outputLayer[outnode];                   // Êä³ö²ã£¨½öÒ»²ã£©
-	hiddenNode* hiddenLayer[hidelayer][hidenode];       // Òþº¬²ã£¨¿ÉÄÜÓÐ¶à²ã£©
+	//创建一个数组指针，该数组的指向一个结构体变量，这样做的好处就是使数据调用清楚
+	inputNode* inputLayer[innode];                      // 输入层（仅一层）
+	outputNode* outputLayer[outnode];                   // 输出层（仅一层）
+	hiddenNode* hiddenLayer[hidelayer][hidenode];       // 隐含层（可能有多层）
 };
