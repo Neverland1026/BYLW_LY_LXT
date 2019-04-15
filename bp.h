@@ -11,7 +11,7 @@ using namespace std;
 #define hidenode 5 //Òþº¬½ÚµãÊý
 #define hidelayer 1 // Òþº¬²ãÊý
 #define outnode 5 //Êä³ö½ÚµãÊý
-#define learningRate 0.09 // Ñ§Ï°ËÙÂÊ
+#define learningRate 0.1 // Ñ§Ï°ËÙÂÊ
 
 // --- -1~1 Ëæ»úÊý²úÉúÆ÷ --- 
 inline double get_11Random()    // -1 ~ 1

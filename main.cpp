@@ -325,7 +325,7 @@ namespace LXT{
 		// 训练模型
 		std::vector<sample> sampleGroupInput(std::begin(sampleInput), std::end(sampleInput));
 		BpNet testNet;
-		testNet.training(sampleGroupInput, 0.001);
+		testNet.training(sampleGroupInput, 0.01f); // 第二个参数是全局误差
 
 		// 整合输出数据
 		int numTest = pTestData.size();
@@ -1307,3 +1307,12 @@ int main(){
 
 	return 0;
 }
+
+
+/*
+ * 需要修改的地方
+ * 1、#define innode 7 // 输入节点
+ * 2、#define outnode 5 // 输出节点
+ * 3、bp.cpp if (loop_time % 100000 == 0) ofs << error << std::endl;  // 输出误差
+ * 4、main.cpp 382 行的学习率
+ **/

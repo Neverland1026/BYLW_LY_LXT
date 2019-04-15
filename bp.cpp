@@ -186,11 +186,12 @@ void BpNet::training(static vector<sample> sampleGroup, double threshold)
 	std::ofstream ofs("E:/log-error.txt");  // 定义输出误差文件
 
 	int numCount = 1;
-
+	static int loop_time = 0; // LY
 	while (error > threshold) // 当误差大于阈值时报错
 	{
-		// cout << "training error: " << error << endl; // 输出误差
-		ofs << error << std::endl;
+		loop_time++; // LY
+		if (loop_time % 100000 == 0)
+			ofs << error << std::endl;  // 输出误差
 
 		error = 0.f;
 		// initialize delta sum 将区间（数据范围,数据类型)元素赋值到当前的vector容器中，更新wDeltaSum值
@@ -266,7 +267,7 @@ void BpNet::training(static vector<sample> sampleGroup, double threshold)
 		}
 	}
 
-	ofs.close();
+	ofs.close(); // LY
 }
 //该函数内部调用了forwardPropagationEpoc()backPropagationEpoc()setInput setOutput
 
